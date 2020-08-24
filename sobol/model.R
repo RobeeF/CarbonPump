@@ -1,6 +1,5 @@
 anderson<-function(X, flux_out_nb = NULL)
 {
-  
   # Parameters dispatching
   y_B = X[,1]
   w_att = X[,2]
@@ -22,9 +21,9 @@ anderson<-function(X, flux_out_nb = NULL)
   h_npe = X[,18]
   zi = X[,19]
   zi2 = X[,20]
-  
+ 
   n_bootstrap = dim(X)[1]
-  
+   
   ex_D1in     <- 74     # POC export, mg C m-2 d-1
   ex_DOCin    <- 15     # DOC export: direct, mg C m-2 d-1
   ex_act      <- 3     # DOC export: via active flux, mg C m-2 d-1
@@ -42,9 +41,6 @@ anderson<-function(X, flux_out_nb = NULL)
   Z <- matrix(1.0, n_bootstrap, 6)   #6 trophic levels of Z
   Batt2 <- rep(0.5, n_bootstrap)   # attached prokaryotes: D2
   Vatt2 <- rep(0.5, n_bootstrap) # attached prokaryote consumers: D2
-  
-  # 2D array to hold fluxes 14 cols for the different state vars (incl. 6Z)
-  #flux <- matrix(rep(0.0, times=160), nrow=10, ncol=16)
   
   # 3D array to hold fluxes 14 cols for the different state vars (incl. 6Z)
   flux = array(0.0, dim=c(n_bootstrap, 10, 16))
@@ -82,7 +78,7 @@ anderson<-function(X, flux_out_nb = NULL)
       D1toBatt <- rate*D1*y_B*(1.0-alpha)                    # uptake D1 by attached prokaryotes
       D2toDOCsolub <- rate*D2*alpha                          # solubilization D2 to DOC
       D2toBatt2 <- rate*D2*(1.0-alpha)                        # uptake D2 by attached prokaryotes
-      DOCuptakeBfl <- rate*DOC                               # uptake DOC by free-living prokaryotes
+      DOCuptakeBfl <- rate*DOC   
       
       # Detritus D1 (sinking)
       flux[,1,1] <- ex_D1in                    # detritus export from euphotic zone
@@ -227,18 +223,73 @@ anderson<-function(X, flux_out_nb = NULL)
       Vatt2 <- Vatt2 + rowSums(flux.df[,151:160])*tstep # attached prokaryote consumers: D2
       
     }  # time loop
-    
+    # respiration
+    RZ <- flux[,2,8]+flux[,2,9]+flux[,2,10]+flux[,2,11]+flux[,2,12]+flux[,2,13]+flux[,2,14]  # detritivores and carnivores
+    RB <- flux[,2,4]+flux[,2,5]+flux[,2,15]      # attached and free-living prokaryotes
     
   }  # time loop 1-10
   
-  res = c(flux[,2,1],flux[,3,1],flux[,4,1],flux[,5,1],flux[,6,1],flux[,1,2],flux[,2,2],flux[,3,2],flux[,4,2],flux[,5,2],flux[,6,2],flux[,3,3],flux[,4,3],flux[,5,3],flux[,6,3],flux[,7,3],flux[,8,3],flux[,9,3],flux[,1,4],flux[,2,4],flux[,3,4],flux[,4,4],flux[,1,5],flux[,2,5],flux[,3,5],flux[,1,6],flux[,2,6],flux[,3,6],flux[,4,6],flux[,5,6],flux[,6,6],flux[,1,7],flux[,2,7],flux[,3,7],flux[,4,7],flux[,5,7],flux[,1,8],flux[,2,8],flux[,3,8],flux[,4,8],flux[,5,8],flux[,6,8],flux[,1,9],flux[,2,9],flux[,3,9],flux[,4,9],flux[,5,9],flux[,6,9],flux[,1,10],flux[,2,10],flux[,3,10],flux[,4,10],flux[,5,10],flux[,6,10],flux[,1,11],flux[,2,11],flux[,3,11],flux[,4,11],flux[,5,11],flux[,6,11],flux[,1,12],flux[,2,12],flux[,3,12],flux[,4,12],flux[,5,12],flux[,6,12],flux[,1,13],flux[,2,13],flux[,3,13],flux[,4,13],flux[,5,13],flux[,6,13],flux[,1,14],flux[,2,14],flux[,3,14],flux[,4,14],flux[,5,14],flux[,1,15],flux[,2,15],flux[,4,15],flux[,1,16],flux[,2,16],flux[,3,16],flux[,4,16],flux[,6,16])
-  res = matrix(data = res, n_bootstrap, 85)
   
+  # Inputs of C to mesopelagic zone
+  n <- flux[,1,1]+flux[,1,3]+flux[,2,3]                # total C input (POC plus DOC)
+  
+  # Respiration
+  ZR <- -(flux[,2,9]+flux[,2,10]+flux[,2,11]+flux[,2,12]+flux[,2,13]+flux[,2,14])   # carnivores
+  BattR <- -flux[,2,4]-flux[,2,15]
+  VattR <- -flux[,2,6]-flux[,6,6]-flux[,2,16]-flux[,6,16]  #4 attached prokaryote consumers (includes closure respiration)
+  
+  
+  # Carbon demand
+  ZCD <-flux[,1,9]+flux[,1,10]+flux[,1,11]+flux[,1,12]+flux[,1,13]+flux[,1,14]      # carnivores
+  BattCD <- flux[,1,4]+flux[,1,15]
+  VattCD <- flux[,1,6]+flux[,1,16]
+  
+  # Production: 
+  Prod_Bfl <- DOCuptakeBfl*w_fl                     # free-living prokaryotes
+  Prod_Batt <- (D1toBatt+D2toBatt2)*w_att            # attached prokaryotes
+  Prod_Vfl <- Vflgrazing*(1.0-vfl_DOC)*vfl_beta*vfl_npe      # free-living prokaryote consumers
+  Prod_Vatt <- (Vattgrazing+Vatt2grazing)*(1.0-vatt_DOC)*vatt_beta*vatt_npe # attached prokaryote consumers
+  Prod_H <- Hgrazing*(1.0-h_DOC-h_D2)*h_beta*h_npe  # detritivores
+  Prod_Z <- Zgrazing*(1.0-z_DOC-z_D2)*z_beta*z_npe  # carnivores
+  
+  # D1 sources
+  ex_actD1 <- 0
+  
+  # D2 sources
+  ex_actD2 <- 0
+  
+  # DOC sources: ex,act,sol,Vfl,Vatt,H,Z
+  DOC_sol <- flux[,3,3]+flux[,4,3]
+  
+  #closure respi
+  closure = -(flux[,6,6]+flux[,6,16])
+  D1_Batt <- -flux[,2,1]-flux[,3,1] 
+  D2_Batt <- -flux[,1,2]-flux[,2,2] 
+  
+  #########################SORTIE POUR ANALYSE ABC :
+  
+  Respi_attached = -flux[,2,4]-flux[,2,15]
+  Respi_zooplancton = (-flux[,2,7]) + (-flux[,2,6]-flux[,6,6]-flux[,2,16]-flux[,6,16]) + (-flux[,2,8]) + (-(flux[,2,9]+flux[,2,10]+flux[,2,11]+flux[,2,12]+flux[,2,13]+flux[,2,14]))
+  Production_Free_living = Prod_Bfl
+  Production_attached = Prod_Batt
+  
+  Production_NonSinking =  Prod_Bfl + (D2toBatt2 * w_fl ) #production free living + production bacteries attachÃ©es aux particules suspendues
+  
+  Production_Sinking = D1toBatt*w_att   #production bacterie attachÃ©es aux particules qui chutent (peu importe la vitesse)
+  
+  Respiration_Sinking  = -flux[,2,4]
+  
+  Respiration_zoo = Respi_zooplancton
+  
+  
+  res <- c( Production_NonSinking, Production_Sinking, Respiration_Sinking, Respiration_zoo)
+  res <- matrix(data = res, n_bootstrap, 4)
+ 
   if (!is.null(flux_out_nb)){
     return(res[,flux_out_nb])
   }
   else{
     return(res)
-  }
+  } 
   
 }

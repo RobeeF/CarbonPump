@@ -1,4 +1,4 @@
-setwd("C:/Users/rfuchs/Documents/These/Oceano/carbon_pump_abc/abc")
+setwd("C:/Users/rfuchs/Documents/GitHub/CarbonPump/abc")
 source('model.R')
 
 #install.packages("EasyABC") 
@@ -83,7 +83,7 @@ sum_stat_obs = c(60.19, 1.62, 17.75, 40.46)
 nb_stats = length(sum_stat_obs)
 
 # Hyper parameters
-n = 50000 # 25 minutes for 20000
+n = 300000 # 25 minutes for 20 000, 4 hours for 300 000
 p = 500/n
 
 # Running the algorithm
@@ -159,17 +159,17 @@ par(mfrow=c(4,5))
 
 
 for (k in 1:n_params){
-  plot(0, 0, type = 'n', main = TeX(anderson_labels[k]))
+  #plot(0, 0, type = 'n', main = TeX(anderson_labels[k]))
   
-  #plot(density(ABC_rej$param[,k]), main = TeX(anderson_labels[k]))
+  plot(density(ABC_rej$param[,k]), main = TeX(anderson_labels[k]))
 
-  for (bp in 1:3){
+  for (bp in 1:4){
   abline(v = best_joint_params[bp], col = cols[bp])  
   }
 }
 
 
 # save the params drawn
-write.csv(matrix(ABC_rej$param, 500, 20), 'params.csv')
+write.csv(matrix(ABC_rej$param, 501, 20), 'params.csv')
 write.csv(matrix(best_joint_params[1,], 1, 20), 'best_params.csv')
 

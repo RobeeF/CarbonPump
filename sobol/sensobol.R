@@ -1,6 +1,6 @@
-setwd("C:/Users/rfuchs/Documents/These/Oceano/carbon_pump_abc/sobol")
+setwd("C:/Users/rfuchs/Documents/GitHub/CarbonPump/sobol")
+source('model_seq.R')
 source('model.R')
-source('old_model.R')
 
 #install.packages('sensobol')
 #install.packages('hexbin')
@@ -22,12 +22,12 @@ params <- paste("X", 1:k, sep = "")
 mat <- sobol_matrices(N, k)
 length(anderson(mat))
 
+res = anderson(mat)
+
 for (j in 1:44){
-  res_old = old_anderson(mat[j,])
-  res = anderson(mat)
-  
-  new_res = matrix(data = res, 44, 85)
-  print(new_res[j,] - res_old)
+  res_old = anderson_seq(mat[j,])
+
+  print(res[j,] - res_old)
 }
 
 # No error for the parallelized version
@@ -54,7 +54,7 @@ for (i in 1:5){
   
   start = Sys.time()
   for (j in 1:n_comb){
-    res = old_anderson(mat[j,])
+    res = anderson_seq(mat[j,])
   }
   end = Sys.time()
   non_para[i] = ((end - start))
@@ -89,7 +89,7 @@ n_comb = dim(A)[1]
 '''
 start = Sys.time()
 for (j in 1:n_comb){
-  Y[j,] = old_anderson(A[j,])
+  Y[j,] = anderson_seq(A[j,])
 }
 end = Sys.time()
 print(end-start)
