@@ -278,7 +278,7 @@ anderson<-function(X)
   Production_Free_living = Prod_Bfl 
   Production_attached = Prod_Batt
   
-  Production_NonSinking =  (Prod_Bfl + (D2toBatt2 *w_fl)) * cf_fl * 1E6 #production free living + production bacteries attachées aux particules suspendues
+  Production_NonSinking = (Prod_Bfl + (D2toBatt2 * w_fl)) * cf_fl * 1E6 #production free living + production bacteries attachées aux particules suspendues
   
   Production_Sinking = D1toBatt * w_att * cf_att * 1E6 #production bacterie attachées aux particules qui chutent (peu importe la vitesse)
   
@@ -287,6 +287,6 @@ anderson<-function(X)
   Respiration_zoo = Respi_zooplancton
   
   
-  #c( Production_NonSinking, Production_Sinking, Respiration_Sinking, Respiration_zoo)
-  c( Production_NonSinking, Production_Sinking, Respiration_zoo)
+  #c(Production_NonSinking, Production_Sinking, Respiration_Sinking, Respiration_zoo)
+  c(Production_NonSinking, Production_Sinking, Respiration_zoo)
 }
