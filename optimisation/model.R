@@ -241,7 +241,7 @@ anderson<-function(X)
   ZR <- -(flux[2,9]+flux[2,10]+flux[2,11]+flux[2,12]+flux[2,13]+flux[2,14])   # carnivores
   BattR <- -flux[2,4]-flux[2,15]
   VattR <- -flux[2,6]-flux[6,6]-flux[2,16]-flux[6,16]  #4 attached prokaryote consumers (includes closure respiration)
-  
+  # Manque pas BflR ?
   
   # Carbon demand
   ZCD <-flux[1,9]+flux[1,10]+flux[1,11]+flux[1,12]+flux[1,13]+flux[1,14]      # carnivores
@@ -270,6 +270,7 @@ anderson<-function(X)
   D1_Batt <- -flux[2,1]-flux[3,1] 
   D2_Batt <- -flux[1,2]-flux[2,2] 
   
+  
   #########################SORTIE POUR ANALYSE ABC :
   # CF defined
   
@@ -279,14 +280,16 @@ anderson<-function(X)
   Production_attached = Prod_Batt
   
   Production_NonSinking = (Prod_Bfl + (D2toBatt2 * w_fl)) * cf_fl * 1E6 #production free living + production bacteries attachées aux particules suspendues
-  
   Production_Sinking = D1toBatt * w_att * cf_att * 1E6 #production bacterie attachées aux particules qui chutent (peu importe la vitesse)
   
-  #Respiration_Sinking  = -flux[2,4]
+  Respiration_Sinking  = -flux[2,4]
+  Respiration_NonSinking = -flux[2,5]-flux[2,15]
+
+  # Mettre une assertion ici
+  Respiration_Sinking + Respiration_NonSinking + Respi_zooplancton
   
-  Respiration_zoo = Respi_zooplancton
+  c(Production_NonSinking, Production_Sinking, Respiration_Sinking, Respiration_zoo)
+  #c(Production_NonSinking, Production_Sinking, Respiration_zoo)
+  #c(Production_NonSinking, Production_Sinking)
   
-  
-  #c(Production_NonSinking, Production_Sinking, Respiration_Sinking, Respiration_zoo)
-  c(Production_NonSinking, Production_Sinking, Respiration_zoo)
 }
