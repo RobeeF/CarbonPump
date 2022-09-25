@@ -18,24 +18,27 @@ library(latex2exp)
 anderson_labels = c("psi", 'omega_a', 'omega_FL', 'alpha', 'phi_v', 
                     'beta_v', 'K_v', 'phi_v', 'beta_v', 'K_v',
                     'phi_z', 'beta_z', 'lambda_z', 'K_z', 'phi_h',
-                    'beta_H', 'lambda_h', 'K_h', 'zeta', 'zi2')
+                    'beta_H', 'lambda_h', 'K_h', 'zeta', 'zi2', 'CF_att', 'CF_fl')
 TeX(anderson_labels[1])
 
 
 #==================================================
 # Sobol knn
 #==================================================
-N <- 50000
-k <- 20
+N <- 20000
+k <- 20 # without the CFs
 X <- data.frame(matrix(runif(k * N), nrow = N))
+k2 <- 2 # The 2 CFs
+X2 = data.frame(matrix(runif(k2 * N, min = 0, max = 6) , nrow = N))
+X = cbind(X, X2)
 
 stats_labels = c('Production_NonSinking', 'Production_Sinking', 'Respiration_Sinking', 'Respiration_zoo')
 
 
-order.one.indices = data.frame(matrix(0, 4, 20))
+order.one.indices = data.frame(matrix(0, length(stats_labels), k + k2))
 colnames(order.one.indices) <- anderson_labels
 
-total.indices = matrix(0, 4, 20)
+total.indices = matrix(0, length(stats_labels), k + k2)
 colnames(total.indices) <- anderson_labels
 
 
@@ -45,7 +48,6 @@ for (flow in 1:4){
   x <- sobolshap_knn(model = anderson, X = X, U = 1,
                      method = "rank", flux_out_nb = flow)
 
-  
   colnames(x$S) <- anderson_labels
   print(ggplot(x)  + ggtitle(paste('1st order Sobol indices:', stats_labels[flow])))
   order.one.indices[flow,] = x$S
@@ -74,7 +76,7 @@ for (flow in 1:4){
 for (flow in 1:4){
   plot(total.indices[flow,], main = paste('Total Sobol indices:', stats_labels[flow]),
        ylab = 'Total Sobol indices')
-  axis(1, at=1:20, labels = anderson_labels)
+  axis(1, at=1:(k + k2), labels = anderson_labels)
 }
 
 
